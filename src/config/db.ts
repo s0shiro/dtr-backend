@@ -5,7 +5,7 @@ const envSchema = z.object({
   DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
   BETTER_AUTH_SECRET: z.string().min(1, "BETTER_AUTH_SECRET is required"),
   BETTER_AUTH_URL: z.string().url("BETTER_AUTH_URL must be a valid URL"),
-  FRONTEND_ORIGIN: z.string().url("FRONTEND_ORIGIN must be a valid URL").default("http://localhost:3000"),
+  FRONTEND_ORIGIN: z.string().min(1, "FRONTEND_ORIGIN is required").default("http://localhost:3000"),
 });
 
 const parsed = envSchema.safeParse(process.env);

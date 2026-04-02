@@ -2,7 +2,8 @@
   "compilerOptions": {
     "target": "ES2023",
     "module": "ESNext",
-    "moduleResolution": "bundler",
+    "moduleResolution": "node10",
+    "ignoreDeprecations": "6.0",
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
