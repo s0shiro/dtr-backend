@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 
-import { db } from "../db";
-import { users } from "../db/schema/users";
+import { db } from "../db/index.js";
+import { users } from "../db/schema/users.js";
 
 export class UsersServiceError extends Error {
   constructor(

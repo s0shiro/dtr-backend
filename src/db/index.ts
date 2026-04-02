@@ -3,7 +3,7 @@ import "dotenv/config";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 
-import { dbConfig } from "../config/db";
+import { dbConfig } from "../config/db.js";
 
 const queryClient = postgres(dbConfig.connectionString, {
   max: 10,

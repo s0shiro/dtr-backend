@@ -6,8 +6,8 @@ import {
 	clockOut,
 	deleteLog,
 	listLogs,
-} from "../../controllers/logs";
-import { verifySession } from "../../middleware/auth";
+} from "../../controllers/logs.js";
+import { verifySession } from "../../middleware/auth.js";
 
 export const logsRouter = Router();
 

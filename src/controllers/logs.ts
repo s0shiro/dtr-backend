@@ -1,8 +1,8 @@
 import type { Request, Response } from "express";
 import { z } from "zod";
 
-import { ERROR_MESSAGES } from "../constants/errors";
-import * as logsService from "../services/logs";
+import { ERROR_MESSAGES } from "../constants/errors.js";
+import * as logsService from "../services/logs.js";
 
 const clockPayloadSchema = z.object({
   note: z.string().trim().min(1).max(255).optional(),

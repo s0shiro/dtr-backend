@@ -1,7 +1,7 @@
 import { and, desc, eq, gte, isNull, lt } from "drizzle-orm";
 
-import { db } from "../db";
-import { logs } from "../db/schema/logs";
+import { db } from "../db/index.js";
+import { logs } from "../db/schema/logs.js";
 
 export interface ClockPayload {
   note?: string;

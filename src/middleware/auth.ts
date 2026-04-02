@@ -1,7 +1,7 @@
 import type { NextFunction, Request, Response } from "express";
 import { fromNodeHeaders } from "better-auth/node";
 
-import { auth } from "../config/auth";
+import { auth } from "../config/auth.js";
 
 export async function verifySession(
   req: Request,

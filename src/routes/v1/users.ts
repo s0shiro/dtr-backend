@@ -1,7 +1,7 @@
 import { Router } from "express";
 
-import { getMe, patchMyDailyRate } from "../../controllers/users";
-import { verifySession } from "../../middleware/auth";
+import { getMe, patchMyDailyRate } from "../../controllers/users.js";
+import { verifySession } from "../../middleware/auth.js";
 
 export const usersRouter = Router();
 

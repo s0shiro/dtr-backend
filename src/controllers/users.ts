@@ -1,8 +1,8 @@
 import type { Request, Response } from "express";
 import { z } from "zod";
 
-import { ERROR_MESSAGES } from "../constants/errors";
-import * as usersService from "../services/users";
+import { ERROR_MESSAGES } from "../constants/errors.js";
+import * as usersService from "../services/users.js";
 
 const dailyRatePayloadSchema = z.object({
   dailyRate: z.number().finite().nonnegative().max(1_000_000),
