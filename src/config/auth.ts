@@ -46,29 +46,13 @@ export const auth = betterAuth({
   
   // Advanced cookie configuration for production deployment
   advanced: {
-    // Force secure cookies in production (HTTPS-only)
+    trustedProxyHeaders: true, // MUST BE TRUE for proxy
     useSecureCookies: isProduction,
-    
-    // Default cookie attributes for all auth cookies
     defaultCookieAttributes: {
-      // HTTP-only cookies prevent XSS attacks (JavaScript cannot access)
       httpOnly: true,
-      
-      // Secure cookies require HTTPS (production requirement)
       secure: isProduction,
-      
-      // SameSite policy:
-      // - "lax": Development (same-site requests only)
-      // - "none": Production (cross-domain Heroku ↔ Vercel, requires secure: true)
-      // CRITICAL: "none" is required for Heroku backend + Vercel frontend
-      sameSite: isProduction ? "none" : "lax",
-      
-      // Path scope (all routes)
+      sameSite: "lax", 
       path: "/",
-      
-      // Domain: undefined for separate domains (Heroku + Vercel)
-      // Set to root domain (e.g., "example.com") only if using subdomains (api.example.com + app.example.com)
-      // domain: undefined,
     },
   },
 });

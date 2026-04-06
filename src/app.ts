@@ -8,6 +8,7 @@ import { logsRouter } from "./routes/v1/logs.js";
 import { usersRouter } from "./routes/v1/users.js";
 
 export const app = express();
+app.set("trust proxy", 1);
 
 /**
  * Validates if the origin is allowed based on configured patterns.
