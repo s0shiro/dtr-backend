@@ -14,8 +14,14 @@ const logIdParamsSchema = z.object({
 
 const adjustLogPayloadSchema = z.object({
   target: z.enum(["clockIn", "clockOut"]),
-  minutesDelta: z.number().int(),
-});
+  // New format: absolute ISO timestamp
+  targetTime: z.string().min(1).optional(),
+  // Legacy format: relative minutes delta
+  minutesDelta: z.number().int().optional(),
+}).refine(
+  (d) => d.targetTime !== undefined || d.minutesDelta !== undefined,
+  { message: "Either targetTime or minutesDelta must be provided" },
+);
 
 function normalizeClockPayload(input: z.infer<typeof clockPayloadSchema>) {
   if (input.note === undefined) {
@@ -182,10 +188,18 @@ export async function adjustLogTime(req: Request, res: Response): Promise<void> 
   }
 
   try {
+    const adjustPayload: logsService.AdjustLogPayload = { target: parsedBody.data.target };
+    if (parsedBody.data.targetTime !== undefined) {
+      adjustPayload.targetTime = parsedBody.data.targetTime;
+    }
+    if (parsedBody.data.minutesDelta !== undefined) {
+      adjustPayload.minutesDelta = parsedBody.data.minutesDelta;
+    }
+
     const data = await logsService.adjustLogTime(
       parsedParams.data.id,
       req.user.id,
-      parsedBody.data,
+      adjustPayload,
     );
 
     res.status(200).json({

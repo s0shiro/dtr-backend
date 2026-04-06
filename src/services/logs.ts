@@ -9,7 +9,10 @@ export interface ClockPayload {
 
 export interface AdjustLogPayload {
   target: "clockIn" | "clockOut";
-  minutesDelta: number;
+  /** Absolute ISO 8601 timestamp to set (preferred) */
+  targetTime?: string;
+  /** Legacy: relative minutes delta to add */
+  minutesDelta?: number;
 }
 
 export class LogsServiceError extends Error {
@@ -211,20 +214,26 @@ export async function adjustLogTime(
     throw new LogsServiceError("Log not found.", 404);
   }
 
-  const adjustmentMs = payload.minutesDelta * 60 * 1000;
-
-  if (payload.target === "clockOut" && !existingLog.clockOut) {
-    throw new LogsServiceError("Cannot adjust clock-out on an active log.", 400);
+  // Resolve the target date — prefer absolute targetTime, fall back to minutesDelta
+  let targetDate: Date;
+  if (payload.targetTime) {
+    targetDate = new Date(payload.targetTime);
+    if (Number.isNaN(targetDate.getTime())) {
+      throw new LogsServiceError("Invalid targetTime value.", 400);
+    }
+  } else if (payload.minutesDelta !== undefined) {
+    const base = payload.target === "clockIn" ? existingLog.clockIn : existingLog.clockOut;
+    if (!base) {
+      throw new LogsServiceError("Cannot adjust clock-out on an active log.", 400);
+    }
+    targetDate = new Date(base.getTime() + payload.minutesDelta * 60 * 1000);
+  } else {
+    throw new LogsServiceError("Either targetTime or minutesDelta must be provided.", 400);
   }
 
-  const nextClockIn =
-    payload.target === "clockIn"
-      ? new Date(existingLog.clockIn.getTime() + adjustmentMs)
-      : existingLog.clockIn;
+  const nextClockIn = payload.target === "clockIn" ? targetDate : existingLog.clockIn;
   const nextClockOut =
-    payload.target === "clockOut" && existingLog.clockOut
-      ? new Date(existingLog.clockOut.getTime() + adjustmentMs)
-      : existingLog.clockOut;
+    payload.target === "clockOut" && existingLog.clockOut ? targetDate : existingLog.clockOut;
 
   if (nextClockOut && nextClockOut.getTime() < nextClockIn.getTime()) {
     throw new LogsServiceError("clockOut cannot be earlier than clockIn.", 400);
