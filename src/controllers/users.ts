@@ -104,12 +104,23 @@ export async function patchMySettings(req: Request, res: Response): Promise<void
     return;
   }
 
+  const { autoClockOutEnabled, autoClockOutAmTime, autoClockOutPmTime } = parsedBody.data;
+
+  if (
+    autoClockOutEnabled === undefined &&
+    autoClockOutAmTime === undefined &&
+    autoClockOutPmTime === undefined
+  ) {
+    validationError(res, "At least one settings field is required");
+    return;
+  }
+
   try {
     const data = await usersService.updateSettings(
       req.user.id,
-      parsedBody.data.autoClockOutEnabled,
-      parsedBody.data.autoClockOutAmTime,
-      parsedBody.data.autoClockOutPmTime
+      autoClockOutEnabled,
+      autoClockOutAmTime,
+      autoClockOutPmTime,
     );
 
     res.status(200).json({

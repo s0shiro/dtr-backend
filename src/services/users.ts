@@ -85,13 +85,31 @@ export async function updateDailyRate(userId: string, dailyRate: number): Promis
 
 export async function updateSettings(
   userId: string,
-  autoClockOutEnabled: boolean,
-  autoClockOutAmTime: string,
-  autoClockOutPmTime: string
+  autoClockOutEnabled?: boolean,
+  autoClockOutAmTime?: string,
+  autoClockOutPmTime?: string,
 ): Promise<UserProfile> {
+  const settingsToUpdate: {
+    autoClockOutEnabled?: boolean;
+    autoClockOutAmTime?: string;
+    autoClockOutPmTime?: string;
+  } = {};
+
+  if (autoClockOutEnabled !== undefined) {
+    settingsToUpdate.autoClockOutEnabled = autoClockOutEnabled;
+  }
+
+  if (autoClockOutAmTime !== undefined) {
+    settingsToUpdate.autoClockOutAmTime = autoClockOutAmTime;
+  }
+
+  if (autoClockOutPmTime !== undefined) {
+    settingsToUpdate.autoClockOutPmTime = autoClockOutPmTime;
+  }
+
   const [updatedUser] = await db
     .update(users)
-    .set({ autoClockOutEnabled, autoClockOutAmTime, autoClockOutPmTime })
+    .set(settingsToUpdate)
     .where(eq(users.id, userId))
     .returning({
       id: users.id,
