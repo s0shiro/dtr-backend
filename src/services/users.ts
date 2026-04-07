@@ -18,6 +18,9 @@ export interface UserProfile {
   email: string;
   name: string;
   dailyRate: number | null;
+  autoClockOutEnabled: boolean;
+  autoClockOutAmTime: string;
+  autoClockOutPmTime: string;
 }
 
 export async function getMyProfile(userId: string): Promise<UserProfile> {
@@ -27,6 +30,9 @@ export async function getMyProfile(userId: string): Promise<UserProfile> {
       email: users.email,
       name: users.name,
       dailyRate: users.dailyRate,
+      autoClockOutEnabled: users.autoClockOutEnabled,
+      autoClockOutAmTime: users.autoClockOutAmTime,
+      autoClockOutPmTime: users.autoClockOutPmTime,
     })
     .from(users)
     .where(eq(users.id, userId))
@@ -41,6 +47,9 @@ export async function getMyProfile(userId: string): Promise<UserProfile> {
     email: user.email,
     name: user.name,
     dailyRate: user.dailyRate,
+    autoClockOutEnabled: user.autoClockOutEnabled,
+    autoClockOutAmTime: user.autoClockOutAmTime,
+    autoClockOutPmTime: user.autoClockOutPmTime,
   };
 }
 
@@ -54,6 +63,9 @@ export async function updateDailyRate(userId: string, dailyRate: number): Promis
       email: users.email,
       name: users.name,
       dailyRate: users.dailyRate,
+      autoClockOutEnabled: users.autoClockOutEnabled,
+      autoClockOutAmTime: users.autoClockOutAmTime,
+      autoClockOutPmTime: users.autoClockOutPmTime,
     });
 
   if (!updatedUser) {
@@ -65,5 +77,43 @@ export async function updateDailyRate(userId: string, dailyRate: number): Promis
     email: updatedUser.email,
     name: updatedUser.name,
     dailyRate: updatedUser.dailyRate,
+    autoClockOutEnabled: updatedUser.autoClockOutEnabled,
+    autoClockOutAmTime: updatedUser.autoClockOutAmTime,
+    autoClockOutPmTime: updatedUser.autoClockOutPmTime,
+  };
+}
+
+export async function updateSettings(
+  userId: string,
+  autoClockOutEnabled: boolean,
+  autoClockOutAmTime: string,
+  autoClockOutPmTime: string
+): Promise<UserProfile> {
+  const [updatedUser] = await db
+    .update(users)
+    .set({ autoClockOutEnabled, autoClockOutAmTime, autoClockOutPmTime })
+    .where(eq(users.id, userId))
+    .returning({
+      id: users.id,
+      email: users.email,
+      name: users.name,
+      dailyRate: users.dailyRate,
+      autoClockOutEnabled: users.autoClockOutEnabled,
+      autoClockOutAmTime: users.autoClockOutAmTime,
+      autoClockOutPmTime: users.autoClockOutPmTime,
+    });
+
+  if (!updatedUser) {
+    throw new UsersServiceError("User not found.", 404);
+  }
+
+  return {
+    id: updatedUser.id,
+    email: updatedUser.email,
+    name: updatedUser.name,
+    dailyRate: updatedUser.dailyRate,
+    autoClockOutEnabled: updatedUser.autoClockOutEnabled,
+    autoClockOutAmTime: updatedUser.autoClockOutAmTime,
+    autoClockOutPmTime: updatedUser.autoClockOutPmTime,
   };
 }

@@ -7,6 +7,9 @@ export const users = pgTable("users", {
   dailyRate: numeric("daily_rate", { precision: 10, scale: 2, mode: "number" }),
   emailVerified: boolean("email_verified").notNull().default(false),
   image: text("image"),
+  autoClockOutEnabled: boolean("auto_clock_out_enabled").notNull().default(false),
+  autoClockOutAmTime: varchar("auto_clock_out_am_time", { length: 255 }).notNull().default("12:00"),
+  autoClockOutPmTime: varchar("auto_clock_out_pm_time", { length: 255 }).notNull().default("17:00"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at")
     .notNull()

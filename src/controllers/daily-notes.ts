@@ -22,7 +22,7 @@ export const getDailyNotes = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
-    const month = req.query.month as string | undefined;
+    const month = req.query["month"] as string | undefined;
 
     const notes = await dailyNotesService.getDailyNotesForUser(userId, month);
     res.json({ success: true, data: { notes }, error: null });
