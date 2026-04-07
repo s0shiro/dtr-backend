@@ -4,6 +4,7 @@ import { toNodeHandler } from "better-auth/node";
 
 import { auth } from "./config/auth.js";
 import { env } from "./config/db.js";
+import { dailyNotesRouter } from "./routes/v1/daily-notes.js";
 import { logsRouter } from "./routes/v1/logs.js";
 import { usersRouter } from "./routes/v1/users.js";
 
@@ -75,6 +76,7 @@ app.use(
 app.all("/api/auth/{*any}", toNodeHandler(auth));
 app.use(express.json());
 
+app.use("/api/v1/daily-notes", dailyNotesRouter);
 app.use("/api/v1/logs", logsRouter);
 app.use("/api/v1/users", usersRouter);
 

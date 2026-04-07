@@ -11,7 +11,17 @@ const queryClient = postgres(dbConfig.connectionString, {
   connect_timeout: 10,
 });
 
-export const db = drizzle({ client: queryClient });
+import * as dailyNotesSchema from "./schema/daily_notes.js";
+import * as logsSchema from "./schema/logs.js";
+import * as usersSchema from "./schema/users.js";
+
+const schema = { ...usersSchema, ...logsSchema, ...dailyNotesSchema };
+
+export const db = drizzle({ client: queryClient, schema });
+
+export * from "./schema/daily_notes.js";
+export * from "./schema/logs.js";
+export * from "./schema/users.js";
 
 export async function closeDbConnection(): Promise<void> {
   await queryClient.end({ timeout: 5 });
