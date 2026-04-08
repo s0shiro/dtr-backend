@@ -4,6 +4,7 @@ import {
 	adjustLogTime,
 	clockIn,
 	clockOut,
+	createManualLog,
 	deleteLog,
 	listLogs,
 } from "../../controllers/logs.js";
@@ -16,5 +17,6 @@ logsRouter.use(verifySession);
 logsRouter.get("/", listLogs);
 logsRouter.post("/clock-in", clockIn);
 logsRouter.post("/clock-out", clockOut);
+logsRouter.post("/manual", createManualLog);
 logsRouter.delete("/:id", deleteLog);
 logsRouter.patch("/:id", adjustLogTime);

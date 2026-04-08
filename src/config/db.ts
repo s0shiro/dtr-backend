@@ -7,6 +7,11 @@ const envSchema = z.object({
   BETTER_AUTH_URL: z.string().url("BETTER_AUTH_URL must be a valid URL"),
   FRONTEND_ORIGIN: z.string().min(1, "FRONTEND_ORIGIN is required").default("http://localhost:3000"),
   APP_TIMEZONE: z.string().default("Asia/Manila"),
+  OFFICE_LATITUDE: z.coerce.number().optional(),
+  OFFICE_LONGITUDE: z.coerce.number().optional(),
+  OFFICE_RADIUS_METERS: z.coerce.number().positive().default(50),
+  HOLIDAY_COUNTRY_CODE: z.string().trim().min(2).max(3).default("PH"),
+  HOLIDAY_API_BASE_URL: z.string().url().default("https://date.nager.at/api/v3"),
 });
 
 const parsed = envSchema.safeParse(process.env);

@@ -4,6 +4,7 @@ import cron from "node-cron";
 import { db } from "../db/index.js";
 import { logs } from "../db/schema/logs.js";
 import { users } from "../db/schema/users.js";
+import { syncPublicHolidaysByYear } from "./holidays.js";
 
 /**
  * Automatically clocks out any open logs to the current time, truncated to the minute.
@@ -60,6 +61,22 @@ export async function executeAutoClockOut(currentHHMM?: string) {
 /**
  * Initializes all cron jobs for the application.
  */
+async function syncHolidayCalendar() {
+  try {
+    const now = new Date();
+    const currentYear = now.getUTCFullYear();
+
+    await Promise.all([
+      syncPublicHolidaysByYear(currentYear),
+      syncPublicHolidaysByYear(currentYear + 1),
+    ]);
+
+    console.log(`[Cron] Holiday calendar synced for ${currentYear} and ${currentYear + 1}`);
+  } catch (error) {
+    console.error("[Cron] Holiday sync failed", error);
+  }
+}
+
 export function initCronJobs() {
   const timezone = process.env['APP_TIMEZONE'] || "Asia/Manila";
 
@@ -75,7 +92,14 @@ export function initCronJobs() {
     });
     executeAutoClockOut(currentHHMM);
   }, { timezone });
-}
 
+  // Sync holiday calendar every day at 01:00 local time
+  cron.schedule("0 1 * * *", () => {
+    void syncHolidayCalendar();
+  }, { timezone });
+
+  // Prime cache on startup
+  void syncHolidayCalendar();
+}
 
 

@@ -6,6 +6,13 @@ import * as logsService from "../services/logs.js";
 
 const clockPayloadSchema = z.object({
   note: z.string().trim().min(1).max(255).optional(),
+  location: z
+    .object({
+      latitude: z.number().min(-90).max(90),
+      longitude: z.number().min(-180).max(180),
+      accuracy: z.number().positive().optional(),
+    })
+    .optional(),
 });
 
 const logIdParamsSchema = z.object({
@@ -23,12 +30,30 @@ const adjustLogPayloadSchema = z.object({
   { message: "Either targetTime or minutesDelta must be provided" },
 );
 
+const manualLogPayloadSchema = z.object({
+  clockInAt: z.string().min(1),
+  clockOutAt: z.string().min(1),
+  note: z.string().trim().min(1).max(255).optional(),
+});
+
 function normalizeClockPayload(input: z.infer<typeof clockPayloadSchema>) {
-  if (input.note === undefined) {
-    return {};
+  const payload: logsService.ClockPayload = {};
+
+  if (input.note !== undefined) {
+    payload.note = input.note;
   }
 
-  return { note: input.note };
+  if (input.location !== undefined) {
+    payload.location = {
+      latitude: input.location.latitude,
+      longitude: input.location.longitude,
+      ...(input.location.accuracy !== undefined
+        ? { accuracy: input.location.accuracy }
+        : {}),
+    };
+  }
+
+  return payload;
 }
 
 function validationError(res: Response, message: string) {
@@ -158,6 +183,38 @@ export async function deleteLog(req: Request, res: Response): Promise<void> {
     const data = await logsService.deleteLog(parsedParams.data.id, req.user.id);
 
     res.status(200).json({
+      success: true,
+      data,
+      error: null,
+    });
+  } catch (error) {
+    serviceError(res, error);
+  }
+}
+
+export async function createManualLog(req: Request, res: Response): Promise<void> {
+  if (!req.user) {
+    unauthorizedError(res);
+    return;
+  }
+
+  const parsedBody = manualLogPayloadSchema.safeParse(req.body ?? {});
+
+  if (!parsedBody.success) {
+    validationError(res, "Invalid manual log payload");
+    return;
+  }
+
+  try {
+    const manualPayload: logsService.CreateManualLogPayload = {
+      clockInAt: parsedBody.data.clockInAt,
+      clockOutAt: parsedBody.data.clockOutAt,
+      ...(parsedBody.data.note !== undefined ? { note: parsedBody.data.note } : {}),
+    };
+
+    const data = await logsService.createManualLog(req.user.id, manualPayload);
+
+    res.status(201).json({
       success: true,
       data,
       error: null,
