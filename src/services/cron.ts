@@ -1,6 +1,7 @@
 import { and, isNull, lt, sql, inArray, eq, or } from "drizzle-orm";
 import cron from "node-cron";
 
+import { env } from "../config/db.js";
 import { db } from "../db/index.js";
 import { logs } from "../db/schema/logs.js";
 import { users } from "../db/schema/users.js";
@@ -11,7 +12,7 @@ import { syncPublicHolidaysByYear } from "./holidays.js";
  */
 export async function executeAutoClockOut(currentHHMM?: string) {
   try {
-    const timezone = process.env['APP_TIMEZONE'] || "Asia/Manila";
+    const timezone = env.APP_TIMEZONE;
     const targetDate = new Date();
     // Zero out seconds and ms to map exactly to the cron minute trigger
     targetDate.setSeconds(0, 0);
@@ -78,7 +79,7 @@ async function syncHolidayCalendar() {
 }
 
 export function initCronJobs() {
-  const timezone = process.env['APP_TIMEZONE'] || "Asia/Manila";
+  const timezone = env.APP_TIMEZONE;
 
   console.log(`[Cron] Starting cron scheduler (Timezone: ${timezone})`);
 
@@ -93,13 +94,17 @@ export function initCronJobs() {
     executeAutoClockOut(currentHHMM);
   }, { timezone });
 
-  // Sync holiday calendar every day at 01:00 local time
-  cron.schedule("0 1 * * *", () => {
-    void syncHolidayCalendar();
-  }, { timezone });
+  if (env.ENABLE_HOLIDAY_CRON) {
+    // Sync holiday calendar every day at 01:00 local time
+    cron.schedule("0 1 * * *", () => {
+      void syncHolidayCalendar();
+    }, { timezone });
 
-  // Prime cache on startup
-  void syncHolidayCalendar();
+    // Prime cache on startup
+    void syncHolidayCalendar();
+  } else {
+    console.log("[Cron] Holiday calendar sync disabled (ENABLE_HOLIDAY_CRON=false)");
+  }
 }
 
 

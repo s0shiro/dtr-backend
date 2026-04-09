@@ -12,6 +12,13 @@ const envSchema = z.object({
   OFFICE_RADIUS_METERS: z.coerce.number().positive().default(50),
   HOLIDAY_COUNTRY_CODE: z.string().trim().min(2).max(3).default("PH"),
   HOLIDAY_API_BASE_URL: z.string().url().default("https://date.nager.at/api/v3"),
+  INTERNAL_AUTOMATION_SECRET: z.string().min(1).optional(),
+  N8N_GEOFENCE_WEBHOOK_URL: z.string().url().optional(),
+  N8N_WEBHOOK_SECRET: z.string().min(1).optional(),
+  ENABLE_HOLIDAY_CRON: z
+    .enum(["true", "false"])
+    .optional()
+    .transform((value) => (value ?? "true") === "true"),
 });
 
 const parsed = envSchema.safeParse(process.env);

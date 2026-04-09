@@ -6,6 +6,7 @@ import { auth } from "./config/auth.js";
 import { env } from "./config/db.js";
 import { dailyNotesRouter } from "./routes/v1/daily-notes.js";
 import { logsRouter } from "./routes/v1/logs.js";
+import { automationRouter } from "./routes/v1/automation.js";
 import { usersRouter } from "./routes/v1/users.js";
 
 export const app = express();
@@ -78,6 +79,7 @@ app.use(express.json());
 
 app.use("/api/v1/daily-notes", dailyNotesRouter);
 app.use("/api/v1/logs", logsRouter);
+app.use("/api/v1/automation", automationRouter);
 app.use("/api/v1/users", usersRouter);
 
 app.get("/health", (_req, res) => {
