@@ -2,6 +2,7 @@ import { Router } from "express";
 
 import {
   getMe,
+  getMyDailyMotivation,
   getMyLatestReleaseNotes,
   getMyOfficeConfig,
   patchMyDailyRate,
@@ -16,5 +17,6 @@ usersRouter.use(verifySession);
 usersRouter.get("/me", getMe);
 usersRouter.get("/me/office-config", getMyOfficeConfig);
 usersRouter.get("/me/release-notes/latest", getMyLatestReleaseNotes);
+usersRouter.get("/me/motivation/daily", getMyDailyMotivation);
 usersRouter.patch("/me/daily-rate", patchMyDailyRate);
 usersRouter.patch("/me/settings", patchMySettings);

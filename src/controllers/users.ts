@@ -103,6 +103,25 @@ export async function getMyLatestReleaseNotes(req: Request, res: Response): Prom
   }
 }
 
+export async function getMyDailyMotivation(req: Request, res: Response): Promise<void> {
+  if (!req.user) {
+    unauthorizedError(res);
+    return;
+  }
+
+  try {
+    const data = await usersService.getDailyMotivation();
+
+    res.status(200).json({
+      success: true,
+      data,
+      error: null,
+    });
+  } catch (error) {
+    serviceError(res, error);
+  }
+}
+
 export async function patchMyDailyRate(req: Request, res: Response): Promise<void> {
   if (!req.user) {
     unauthorizedError(res);

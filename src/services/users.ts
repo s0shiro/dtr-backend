@@ -38,6 +38,12 @@ export interface ReleaseNotes {
   highlights: string[];
 }
 
+export interface DailyMotivation {
+  dateKey: string;
+  quote: string;
+  author: string;
+}
+
 export async function getMyProfile(userId: string): Promise<UserProfile> {
   const [user] = await db
     .select({
@@ -110,8 +116,87 @@ const latestReleaseNotes: ReleaseNotes = {
   ],
 };
 
+const defaultMotivationalQuote = {
+  quote: "Stay consistent today—every accurate log moves you forward.",
+  author: "DTR Coach",
+};
+
+interface ApiNinjasQuote {
+  quote: string;
+  author: string;
+  category?: string;
+}
+
+let motivationCache: DailyMotivation | null = null;
+
+function getDateKeyInAppTimezone(): string {
+  const formatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone: env.APP_TIMEZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+
+  return formatter.format(new Date());
+}
+
+async function fetchApiNinjasQuote(): Promise<ApiNinjasQuote | null> {
+  if (!env.API_NINJAS_KEY) {
+    return null;
+  }
+
+  const params = new URLSearchParams({
+    categories: env.API_NINJAS_QUOTE_CATEGORIES,
+  });
+
+  const response = await fetch(`${env.API_NINJAS_QUOTES_URL}?${params.toString()}`, {
+    method: "GET",
+    headers: {
+      "X-Api-Key": env.API_NINJAS_KEY,
+    },
+  });
+
+  if (!response.ok) {
+    return null;
+  }
+
+  const payload = (await response.json().catch(() => null)) as ApiNinjasQuote[] | null;
+
+  if (!payload || payload.length === 0) {
+    return null;
+  }
+
+  const selected = payload[0];
+
+  if (!selected?.quote || !selected?.author) {
+    return null;
+  }
+
+  return selected;
+}
+
 export function getLatestReleaseNotes(): ReleaseNotes {
   return latestReleaseNotes;
+}
+
+export async function getDailyMotivation(): Promise<DailyMotivation> {
+  const dateKey = getDateKeyInAppTimezone();
+
+  if (motivationCache?.dateKey === dateKey) {
+    return motivationCache;
+  }
+
+  const externalQuote = await fetchApiNinjasQuote();
+
+  const resolved: DailyMotivation = {
+    dateKey,
+    quote: externalQuote?.quote ?? defaultMotivationalQuote.quote,
+    author: externalQuote?.author ?? defaultMotivationalQuote.author,
+  };
+
+  motivationCache = resolved;
+
+  return resolved;
 }
 
 export function getOfficeConfig(): OfficeConfig {

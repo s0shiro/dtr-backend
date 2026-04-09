@@ -19,6 +19,9 @@ const envSchema = z.object({
     .enum(["true", "false"])
     .optional()
     .transform((value) => (value ?? "true") === "true"),
+  API_NINJAS_KEY: z.string().min(1).optional(),
+  API_NINJAS_QUOTES_URL: z.string().url().default("https://api.api-ninjas.com/v2/quotes"),
+  API_NINJAS_QUOTE_CATEGORIES: z.string().default("success,wisdom"),
 });
 
 const parsed = envSchema.safeParse(process.env);
