@@ -1,5 +1,6 @@
 import { eq } from "drizzle-orm";
 
+import { env } from "../config/db.js";
 import { db } from "../db/index.js";
 import { users } from "../db/schema/users.js";
 
@@ -21,6 +22,13 @@ export interface UserProfile {
   autoClockOutEnabled: boolean;
   autoClockOutAmTime: string;
   autoClockOutPmTime: string;
+}
+
+export interface OfficeConfig {
+  latitude: number | null;
+  longitude: number | null;
+  radiusMeters: number;
+  configured: boolean;
 }
 
 export async function getMyProfile(userId: string): Promise<UserProfile> {
@@ -80,6 +88,18 @@ export async function updateDailyRate(userId: string, dailyRate: number): Promis
     autoClockOutEnabled: updatedUser.autoClockOutEnabled,
     autoClockOutAmTime: updatedUser.autoClockOutAmTime,
     autoClockOutPmTime: updatedUser.autoClockOutPmTime,
+  };
+}
+
+export function getOfficeConfig(): OfficeConfig {
+  const latitude = typeof env.OFFICE_LATITUDE === "number" ? env.OFFICE_LATITUDE : null;
+  const longitude = typeof env.OFFICE_LONGITUDE === "number" ? env.OFFICE_LONGITUDE : null;
+
+  return {
+    latitude,
+    longitude,
+    radiusMeters: env.OFFICE_RADIUS_METERS,
+    configured: latitude !== null && longitude !== null,
   };
 }
 

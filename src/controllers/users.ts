@@ -65,6 +65,25 @@ export async function getMe(req: Request, res: Response): Promise<void> {
   }
 }
 
+export async function getMyOfficeConfig(req: Request, res: Response): Promise<void> {
+  if (!req.user) {
+    unauthorizedError(res);
+    return;
+  }
+
+  try {
+    const data = usersService.getOfficeConfig();
+
+    res.status(200).json({
+      success: true,
+      data,
+      error: null,
+    });
+  } catch (error) {
+    serviceError(res, error);
+  }
+}
+
 export async function patchMyDailyRate(req: Request, res: Response): Promise<void> {
   if (!req.user) {
     unauthorizedError(res);
