@@ -84,6 +84,25 @@ export async function getMyOfficeConfig(req: Request, res: Response): Promise<vo
   }
 }
 
+export async function getMyLatestReleaseNotes(req: Request, res: Response): Promise<void> {
+  if (!req.user) {
+    unauthorizedError(res);
+    return;
+  }
+
+  try {
+    const data = usersService.getLatestReleaseNotes();
+
+    res.status(200).json({
+      success: true,
+      data,
+      error: null,
+    });
+  } catch (error) {
+    serviceError(res, error);
+  }
+}
+
 export async function patchMyDailyRate(req: Request, res: Response): Promise<void> {
   if (!req.user) {
     unauthorizedError(res);

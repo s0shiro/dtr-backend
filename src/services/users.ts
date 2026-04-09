@@ -31,6 +31,13 @@ export interface OfficeConfig {
   configured: boolean;
 }
 
+export interface ReleaseNotes {
+  releaseId: string;
+  releasedAt: string;
+  title: string;
+  highlights: string[];
+}
+
 export async function getMyProfile(userId: string): Promise<UserProfile> {
   const [user] = await db
     .select({
@@ -89,6 +96,22 @@ export async function updateDailyRate(userId: string, dailyRate: number): Promis
     autoClockOutAmTime: updatedUser.autoClockOutAmTime,
     autoClockOutPmTime: updatedUser.autoClockOutPmTime,
   };
+}
+
+const latestReleaseNotes: ReleaseNotes = {
+  releaseId: "2026-04-09-map-geofence",
+  releasedAt: "2026-04-09",
+  title: "What’s new in DTR",
+  highlights: [
+    "Live map now shows your location and your office location in one view.",
+    "You’ll get a reminder when you enter the office area so you won’t forget to clock in.",
+    "Location checks are now more reliable for clock in and clock out.",
+    "You can add manual time logs more easily when you need to correct missed taps.",
+  ],
+};
+
+export function getLatestReleaseNotes(): ReleaseNotes {
+  return latestReleaseNotes;
 }
 
 export function getOfficeConfig(): OfficeConfig {
