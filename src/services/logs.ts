@@ -1,4 +1,4 @@
-import { and, desc, eq, gt, gte, isNull, lt, or } from "drizzle-orm";
+import { and, desc, eq, gt, gte, isNull, lt, ne, or } from "drizzle-orm";
 
 import { env } from "../config/db.js";
 import { db } from "../db/index.js";
@@ -172,16 +172,20 @@ export async function listLogs(userId: string, monthStr?: string): Promise<{
     const monthPattern = /^\d{4}-\d{2}$/;
 
     if (monthPattern.test(monthStr)) {
+      // Expand the search window by 24 hours on both sides to account for timezone offsets
+      // where local time belongs to the month but UTC time belongs to the adjacent month.
       const start = new Date(`${monthStr}-01T00:00:00.000Z`);
 
       if (!Number.isNaN(start.getTime())) {
+        const queryStart = new Date(start.getTime() - 24 * 60 * 60 * 1000);
         const end = new Date(start);
         end.setUTCMonth(end.getUTCMonth() + 1);
+        const queryEnd = new Date(end.getTime() + 24 * 60 * 60 * 1000);
 
         whereCondition = and(
           eq(logs.userId, userId),
-          gte(logs.clockIn, start),
-          lt(logs.clockIn, end),
+          gte(logs.clockIn, queryStart),
+          lt(logs.clockIn, queryEnd),
         )!;
         resolvedMonth = monthStr;
       }
@@ -532,8 +536,26 @@ export async function adjustLogTime(
   const nextClockOut =
     payload.target === "clockOut" && existingLog.clockOut ? targetDate : existingLog.clockOut;
 
-  if (nextClockOut && nextClockOut.getTime() < nextClockIn.getTime()) {
-    throw new LogsServiceError("clockOut cannot be earlier than clockIn.", 400);
+  if (nextClockOut && nextClockOut.getTime() <= nextClockIn.getTime()) {
+    throw new LogsServiceError("clockOut must be later than clockIn.", 400);
+  }
+
+  // Ensure this adjustment doesn't overlap with another existing log
+  const [overlap] = await db
+    .select({ id: logs.id })
+    .from(logs)
+    .where(
+      and(
+        eq(logs.userId, userId),
+        ne(logs.id, logId),
+        lt(logs.clockIn, nextClockOut ?? new Date(nextClockIn.getTime() + 1000 * 60 * 60 * 24 * 365)), // effectively infinity for active logs
+        or(isNull(logs.clockOut), gt(logs.clockOut, nextClockIn)),
+      ),
+    )
+    .limit(1);
+
+  if (overlap) {
+    throw new LogsServiceError("Adjusted time overlaps with an existing entry.", 409);
   }
 
   const updateValues: { clockIn?: Date; clockOut?: Date | null } = {};

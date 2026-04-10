@@ -105,14 +105,12 @@ export async function updateDailyRate(userId: string, dailyRate: number): Promis
 }
 
 const latestReleaseNotes: ReleaseNotes = {
-  releaseId: "2026-04-09-map-geofence",
-  releasedAt: "2026-04-09",
-  title: "What’s new in DTR",
+  releaseId: "2026-04-011-fix-clock-in-overlap",
+  releasedAt: "2026-011-09",
+  title: "Bug fix release: Clock-in overlap issue resolved",
   highlights: [
-    "Live map now shows your location and your office location in one view.",
-    "You’ll get a reminder when you enter the office area so you won’t forget to clock in.",
-    "Location checks are now more reliable for clock in and clock out.",
-    "You can add manual time logs more easily when you need to correct missed taps.",
+    "Resolved an issue where manual clock-ins in the first day of the month could overlap with the last clock-out of the previous month, causing inaccurate time tracking.",
+    "Happy working and have a great day!",
   ],
 };
 
