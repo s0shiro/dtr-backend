@@ -105,14 +105,21 @@ export async function updateDailyRate(userId: string, dailyRate: number): Promis
 }
 
 const latestReleaseNotes: ReleaseNotes = {
-  releaseId: "2026-04-011-fix-clock-in-overlap",
-  releasedAt: "2026-011-09",
-  title: "Bug fix release: Clock-in overlap issue resolved",
+  releaseId: "2026-04-12-security-update-phase-2",
+  releasedAt: "2026-04-12",
+  title: "🔐 Enhanced Security & Reliability Update",
   highlights: [
-    "Resolved an issue where manual clock-ins in the first day of the month could overlap with the last clock-out of the previous month, causing inaccurate time tracking.",
-    "Happy working and have a great day!",
+    "🛡️ Stronger Protection: Your login is now more secure. We've improved our defenses against unauthorized access attempts and hacking.",
+    "⚡ Faster & More Reliable: Fixed critical issues with the login system so you can log in smoothly every time without errors.",
+    "🚫 Brute-Force Protection: If someone tries to log in too many times with the wrong password, the app automatically blocks them temporarily. This keeps your account safe.",
+    "🌐 Data Privacy: Only authorized apps can access your data. We've hardened our security to prevent malicious websites from stealing your information.",
+    "📍 Accurate Tracking: Improved location verification. The app now better protects against fake location claims for on-site tracking.",
+    "👀 Security Monitoring: We now track suspicious activity like failed login attempts and unauthorized access. This helps us detect and prevent attacks.",
+    "✅ Coming Soon: Offline Mode for Logs. Soon you'll be able to view your work logs even without an internet connection!",
+    "Thank you for using DTR Tracker. Your data security is our priority.",
   ],
 };
+
 
 const defaultMotivationalQuote = {
   quote: "Stay consistent today—every accurate log moves you forward.",
