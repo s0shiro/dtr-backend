@@ -1,82 +1,107 @@
 import cors from "cors";
 import express from "express";
+import helmet from "helmet";
 import { toNodeHandler } from "better-auth/node";
 
 import { auth } from "./config/auth.js";
 import { env } from "./config/db.js";
+import { createCsrfMiddleware } from "./middleware/csrf.js";
+import { authRateLimiter, automationRateLimiter } from "./middleware/rate-limit.js";
+import { automationRouter } from "./routes/v1/automation.js";
 import { dailyNotesRouter } from "./routes/v1/daily-notes.js";
 import { logsRouter } from "./routes/v1/logs.js";
-import { automationRouter } from "./routes/v1/automation.js";
 import { usersRouter } from "./routes/v1/users.js";
+import {
+  parseAllowedOriginRule,
+  isAllowedOrigin,
+} from "./utils/origin-matcher.js";
+import { logSecurityEvent } from "./utils/security-log.js";
 
 export const app = express();
-app.set("trust proxy", 1);
+app.set("trust proxy", env.TRUST_PROXY);
 
-/**
- * Validates if the origin is allowed based on configured patterns.
- * Supports:
- * - Exact matches (http://localhost:3000)
- * - Wildcard patterns (https://*.vercel.app)
- */
-function isAllowedOrigin(origin: string, allowedOrigins: string[]): boolean {
-  return allowedOrigins.some((allowedOrigin) => {
-    // Exact match
-    if (allowedOrigin === origin) {
-      return true;
-    }
+const allowedOrigins = env.FRONTEND_ORIGIN.split(",")
+  .map((origin) => origin.trim())
+  .filter((origin) => origin.length > 0);
 
-    // Wildcard pattern matching (e.g., https://*.vercel.app)
-    if (allowedOrigin.includes("*")) {
-      const pattern = allowedOrigin
-        .replace(/[.+?^${}()|[\]\\]/g, "\\$&") // Escape special regex chars
-        .replace(/\*/g, ".*"); // Replace * with .*
-      const regex = new RegExp(`^${pattern}$`);
-      return regex.test(origin);
-    }
+const parsedAllowedOrigins = allowedOrigins.map((origin) => ({
+  origin,
+  rule: parseAllowedOriginRule(origin),
+}));
 
-    return false;
-  });
+const invalidAllowedOrigins = parsedAllowedOrigins
+  .filter((entry) => entry.rule === null)
+  .map((entry) => entry.origin);
+
+if (invalidAllowedOrigins.length > 0) {
+  throw new Error(`Invalid FRONTEND_ORIGIN value(s): ${invalidAllowedOrigins.join(", ")}`);
 }
 
-// Parse FRONTEND_ORIGIN - supports comma-separated list
-const allowedOrigins = env.FRONTEND_ORIGIN.split(",").map((origin) =>
-  origin.trim(),
-);
+const allowedOriginRules = parsedAllowedOrigins
+  .map((entry) => entry.rule)
+  .filter((rule): rule is NonNullable<typeof rule> => rule !== null);
+
+app.use(helmet());
+const corsOptions = {
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization",
+    "X-Requested-With",
+    "Accept",
+    "Origin",
+    "Referer",
+    "x-internal-secret",
+  ],
+  exposedHeaders: ["Set-Cookie"],
+  maxAge: 86400,
+};
 
 app.use(
-  cors({
-    origin: (origin, callback) => {
-      // Allow requests with no origin (like mobile apps or curl requests)
-      if (!origin) {
-        return callback(null, true);
-      }
+  cors((req, callback) => {
+    const requestOrigin = req.header("origin");
 
-      if (isAllowedOrigin(origin, allowedOrigins)) {
-        callback(null, true);
-      } else {
-        callback(
-          new Error(
-            `Origin ${origin} not allowed by CORS policy. Allowed origins: ${allowedOrigins.join(", ")}`,
-          ),
-        );
-      }
-    },
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: [
-      "Content-Type",
-      "Authorization",
-      "X-Requested-With",
-      "Accept",
-      "Origin",
-    ],
-    exposedHeaders: ["Set-Cookie"],
-    maxAge: 86400, // 24 hours - cache preflight requests
+    if (!requestOrigin) {
+      return callback(null, {
+        ...corsOptions,
+        origin: true,
+      });
+    }
+
+    if (isAllowedOrigin(requestOrigin, allowedOriginRules)) {
+      return callback(null, {
+        ...corsOptions,
+        origin: true,
+      });
+    }
+
+    logSecurityEvent("cors_reject", {
+      req,
+      context: {
+        reason: "origin_not_allowed",
+        originPresent: true,
+        refererPresent: Boolean(req.header("referer")),
+      },
+    });
+
+    return callback(new Error("Origin not allowed by CORS policy."), {
+      ...corsOptions,
+      origin: false,
+    });
   }),
 );
-app.all("/api/auth/{*any}", toNodeHandler(auth));
+
+const authHandler = toNodeHandler(auth);
+app.use("/api/auth", authRateLimiter);
+app.all("/api/auth", authHandler);
+app.all("/api/auth/{*any}", authHandler);
+
 app.use(express.json());
 
+app.use("/api/v1", createCsrfMiddleware({ allowedOriginRules }));
+
+app.use("/api/v1/automation", automationRateLimiter);
 app.use("/api/v1/daily-notes", dailyNotesRouter);
 app.use("/api/v1/logs", logsRouter);
 app.use("/api/v1/automation", automationRouter);

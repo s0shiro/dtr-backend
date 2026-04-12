@@ -9,10 +9,12 @@ import {
   patchMySettings,
 } from "../../controllers/users.js";
 import { verifySession } from "../../middleware/auth.js";
+import { userApiRateLimiter } from "../../middleware/rate-limit.js";
 
 export const usersRouter = Router();
 
 usersRouter.use(verifySession);
+usersRouter.use(userApiRateLimiter);
 
 usersRouter.get("/me", getMe);
 usersRouter.get("/me/office-config", getMyOfficeConfig);

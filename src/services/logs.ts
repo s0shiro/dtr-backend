@@ -116,7 +116,7 @@ function evaluateLocation(location?: ClockLocationPayload): LocationEvaluation {
     };
   }
 
-  const { OFFICE_LATITUDE, OFFICE_LONGITUDE, OFFICE_RADIUS_METERS } = env;
+  const { OFFICE_LATITUDE, OFFICE_LONGITUDE } = env;
 
   if (OFFICE_LATITUDE === undefined || OFFICE_LONGITUDE === undefined) {
     return {
@@ -134,8 +134,11 @@ function evaluateLocation(location?: ClockLocationPayload): LocationEvaluation {
     OFFICE_LONGITUDE,
   );
 
+  // TODO(security): Re-enable trusted "On-site" classification only after server-verifiable
+  // location attestation is implemented (e.g., signed device proofs, trusted network signals,
+  // or geofence events from a trusted backend integration).
   return {
-    tag: distanceMeters <= OFFICE_RADIUS_METERS ? "On-site" : "Remote",
+    tag: "Remote",
     latitude: location.latitude,
     longitude: location.longitude,
     distanceMeters,

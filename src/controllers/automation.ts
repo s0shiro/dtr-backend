@@ -5,6 +5,8 @@ import { env } from "../config/db.js";
 import { ERROR_MESSAGES } from "../constants/errors.js";
 import { syncPublicHolidaysByYear } from "../services/holidays.js";
 import { hasN8nGeofenceWebhook, triggerGeofenceReminder } from "../services/n8n.js";
+import { validateInternalSecret } from "../utils/internal-secret.js";
+import { logSecurityEvent } from "../utils/security-log.js";
 
 const internalHolidaySyncSchema = z.object({
   year: z.coerce.number().int().min(2000).max(2100).optional(),
@@ -36,14 +38,21 @@ function unauthorizedResponse(res: Response) {
 }
 
 function ensureInternalSecret(req: Request): boolean {
-  const configuredSecret = env.INTERNAL_AUTOMATION_SECRET;
+  const validationResult = validateInternalSecret(req);
 
-  if (!configuredSecret) {
-    return false;
+  if (validationResult.valid) {
+    return true;
   }
 
-  const incomingSecret = req.header("x-internal-secret");
-  return incomingSecret === configuredSecret;
+  logSecurityEvent("internal_secret_auth_failure", {
+    req,
+    userId: req.user?.id,
+    context: {
+      reason: validationResult.reason,
+    },
+  });
+
+  return false;
 }
 
 export async function syncHolidaysInternal(req: Request, res: Response): Promise<void> {
